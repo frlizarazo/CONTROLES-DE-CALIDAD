@@ -1,0 +1,35 @@
+NOMBRES_DE_COLUMNAS = [
+    'Temperatura'                    ,
+    'Temperatura del Agua'           ,
+    'Velocidad del Viento'           ,
+    'Dirección del Viento'           ,
+    'Dirección de la Rosa'           ,
+    'Presión Barométrica'            ,
+    'Humedad Relativa'               ,
+    'Precipitación Acumulada'        ,
+    'Precipitación'                  ,
+    'Radiación Solar'                ,
+    'Evapotranspiración Acumulada'   ,
+    'Evapotranspiración'             ,
+    'Nivel'                          ,
+    'Observaciones'                  ,
+    'Caudal'                         ,
+    '--'
+]
+
+UNIDADES = {
+    'Temperatura'                     : 'Temperatura [°C]', 
+    'Velocidad del Viento'            : 'Velocidad del Viento [m/s]', 
+    'Dirección del Viento'            : 'Dirección del Viento [°]', 
+    'Dirección de la Rosa'            : 'Dirección de la Rosa', 
+    'Presión Barométrica'             : 'Presión Barométrica [mmHg]', 
+    'Humedad Relativa'                : 'Humedad Relativa [%]', 
+    'Precipitación Acumulada'         : 'Precipitación Acumulada [mm]', 
+    'Precipitación'                   : 'Precipitación [mm]', 
+    'Radiación Solar'                 : 'Radiación Solar [W/m2]', 
+    'Evapotranspiración Acumulada'    : 'Evapotranspiración Acumulada [mm]', 
+    'Evapotranspiración'              : 'Evapotranspiración [mm]', 
+    'Nivel'                           : 'Nivel [cm]', 
+    'Observaciones'                   : 'Observaciones',
+    'Caudal'                          : 'Caudal',
+}
