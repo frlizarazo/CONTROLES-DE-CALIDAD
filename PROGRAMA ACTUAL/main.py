@@ -100,7 +100,8 @@ class Ventana_principal(tk.Tk):
          self.exportar_eliminados,
          self.exportar_graficas,
          self.resolucion,
-         self.formato_fecha) = cargar_ajustes()
+         self.formato_fecha,
+         self.resolucion_pluviometro) = cargar_ajustes()
 
 # INICIALIZACIÓN ================================================================================= #
 

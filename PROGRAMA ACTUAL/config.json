@@ -1,0 +1,11 @@
+{
+    "directorio_inicial": "C:/Users/Franklin/Desktop/SIMAC/02_PROGRAMS/01_CCAL Taller",
+    "directorio_de_salida": "C:/Users/Franklin/Desktop/SIMAC/02_PROGRAMS/01_CCAL Taller/Salida",
+    "protocolo_de_seleccion": "por archivos",
+    "patron_de_seleccion": "*",
+    "exportar_eliminados": "no",
+    "exportar_graficas": "no",
+    "resolucion": 5,
+    "formato_fecha": "%d/%m/%Y %H:%M:%S",
+    "resolucion_pluviometro": 0.2
+}

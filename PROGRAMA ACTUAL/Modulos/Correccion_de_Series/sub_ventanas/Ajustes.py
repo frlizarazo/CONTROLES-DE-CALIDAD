@@ -85,7 +85,7 @@ class Ajustes(tk.Toplevel):
             _incluir_boton_2   = True,
             _nombre_ajuste     = 'protocolo_de_seleccion',
             _opciones_ajuste   = ['por archivos', 'por carpeta'],
-            _row               = 0,
+            _row                = 0,
         )
 
         boton_interruptor(
@@ -95,7 +95,7 @@ class Ajustes(tk.Toplevel):
             _incluir_texto_2   = False,
             _nombre_ajuste     = 'exportar_eliminados',
             _opciones_ajuste   = ['no', 'si'],
-            _row               = 1,
+            _row                = 1,
         )
         boton_interruptor(
             contenedor1,
@@ -104,7 +104,7 @@ class Ajustes(tk.Toplevel):
             _incluir_texto_2   = False,
             _nombre_ajuste     = 'exportar_graficas',
             _opciones_ajuste   = ['no', 'si'],
-            _row               = 2,
+            _row                = 2,
         )
 
         espacio(self, _fondo = COLOR_FONDO, _alineacion = 'top')
@@ -114,9 +114,9 @@ class Ajustes(tk.Toplevel):
 
         tk.Label(
             contenedor2, 
-            text               = 'Resolución de los datos: ', 
-            bg                 = COLOR_FONDO, 
-            fg                 = COLOR_FUENTE_SECUNDARIA, 
+            text                = 'Resolución de los datos: ', 
+            bg                  = COLOR_FONDO, 
+            fg                  = COLOR_FUENTE_SECUNDARIA, 
             disabledforeground = '#f0f0f0',
             **FUENTE_NEGRITA
         ).pack(LEFT, **MARGEN_SOLO_HORIZONTAL)
@@ -124,7 +124,7 @@ class Ajustes(tk.Toplevel):
         self.spinbox = ttk.Spinbox(
             contenedor2, 
             from_      = 0, 
-            to         = 1440, 
+            to           = 1440, 
             increment = 5, 
             width      = 8, 
             format     = "%.0f min",
@@ -136,20 +136,19 @@ class Ajustes(tk.Toplevel):
 
         espacio(self, _fondo = COLOR_FONDO, _alineacion = 'top')
 
-        # --- NUEVO CONTENEDOR PARA FORMATO DE FECHA ---
+        # --- CONTENEDOR PARA FORMATO DE FECHA ---
         contenedor3 = tk.Frame(self, bg = COLOR_FONDO)
         contenedor3.pack()
 
         tk.Label(
             contenedor3, 
-            text               = 'Formato de Fecha: ', 
-            bg                 = COLOR_FONDO, 
-            fg                 = COLOR_FUENTE_SECUNDARIA, 
+            text                = 'Formato de Fecha: ', 
+            bg                  = COLOR_FONDO, 
+            fg                  = COLOR_FUENTE_SECUNDARIA, 
             disabledforeground = '#f0f0f0',
             **FUENTE_NEGRITA
         ).pack(LEFT, **MARGEN_SOLO_HORIZONTAL)
 
-        # Usamos un Combobox para permitir elegir o escribir formatos comunes de fecha/hora (strptime)
         formatos_disponibles = [
             '%d/%m/%Y %H:%M:%S',
             '%Y-%m-%d %H:%M:%S',
@@ -167,27 +166,69 @@ class Ajustes(tk.Toplevel):
         self.combo_fecha.pack(LEFT)
         self.combo_fecha.set(getattr(self.ventana_principal, 'formato_fecha', '%d/%m/%Y %H:%M:%S'))
 
-        # Guardar cambios al seleccionar o presionar enter / salir del foco
         self.combo_fecha.bind("<<ComboboxSelected>>", self.seleccionar_formato_fecha)
         self.combo_fecha.bind("<Return>", self.seleccionar_formato_fecha)
         self.combo_fecha.bind("<FocusOut>", self.seleccionar_formato_fecha)
 
         espacio(self, _fondo = COLOR_FONDO, _alineacion = 'top')
 
-        self.spinbox.bind("<Return>",           self.seleccionar_resolucion)
-        self.spinbox.bind("<FocusOut>",         self.seleccionar_resolucion)
-        self.spinbox.bind("<KeyRelease>",       self.seleccionar_resolucion)
+        # --- NUEVO CONTENEDOR PARA RESOLUCIÓN DEL PLUVIÓMETRO ---
+        contenedor4 = tk.Frame(self, bg = COLOR_FONDO)
+        contenedor4.pack()
+
+        tk.Label(
+            contenedor4, 
+            text                = 'Resolución Pluviómetro: ', 
+            bg                  = COLOR_FONDO, 
+            fg                  = COLOR_FUENTE_SECUNDARIA, 
+            disabledforeground = '#f0f0f0',
+            **FUENTE_NEGRITA
+        ).pack(LEFT, **MARGEN_SOLO_HORIZONTAL)
+
+        self.spinbox_pluvis = ttk.Spinbox(
+            contenedor4, 
+            from_      = 0.01, 
+            to           = 10.0, 
+            increment = 0.1, 
+            width      = 8, 
+            format     = "%.2f mm",
+            command    = self.seleccionar_resolucion_pluviometro
+        )
+        self.spinbox_pluvis.pack(LEFT)
+
+        res_pluviometro_actual = getattr(self.ventana_principal, 'resolucion_pluviometro', 0.2)
+        self.spinbox_pluvis.insert(0, f'{res_pluviometro_actual:.2f} mm')
+
+        espacio(self, _fondo = COLOR_FONDO, _alineacion = 'top')
+
+        # Bindings para guardar al presionar Enter, perder el foco o escribir
+        self.spinbox.bind("<Return>",          self.seleccionar_resolucion)
+        self.spinbox.bind("<FocusOut>",        self.seleccionar_resolucion)
+        self.spinbox.bind("<KeyRelease>",      self.seleccionar_resolucion)
+
+        self.spinbox_pluvis.bind("<Return>",     self.seleccionar_resolucion_pluviometro)
+        self.spinbox_pluvis.bind("<FocusOut>",   self.seleccionar_resolucion_pluviometro)
+        self.spinbox_pluvis.bind("<KeyRelease>", self.seleccionar_resolucion_pluviometro)
     
     def seleccionar_resolucion(self, evento = None):
         guardar_ajustes(valor = self.spinbox.get().replace(' min', ''), configuracion = 'resolucion')
     
+    def seleccionar_resolucion_pluviometro(self, evento = None):
+        try:
+            texto_limpio = self.spinbox_pluvis.get().replace(' mm', '').strip()
+            valor = float(texto_limpio)
+            guardar_ajustes(valor = valor, configuracion = 'resolucion_pluviometro')
+            if hasattr(self.ventana_principal, 'cargar_ajustes'):
+                self.ventana_principal.cargar_ajustes()
+        except ValueError:
+            pass
+
     def seleccionar_formato_fecha(self, evento = None):
         guardar_ajustes(valor = self.combo_fecha.get(), configuracion = 'formato_fecha')
         if hasattr(self.ventana_principal, 'cargar_ajustes'):
             self.ventana_principal.cargar_ajustes()
 
     def seleccionar_directorio(self, _ventana_principal, _ajuste):
-
         directorio_inicial = getattr(_ventana_principal, _ajuste)
 
         dir = askdirectory(

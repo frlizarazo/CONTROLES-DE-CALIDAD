@@ -13,8 +13,14 @@ from Elementos.Secciones.Encabezado import Encabezado
 from Datos.columnas import NOMBRES_DE_COLUMNAS
 
 class Variables(tk.Toplevel):
+    # Diccionarios de clase para recordar estados y la última ruta de archivo por módulo
+    _estado_checks_memoria = {}
+    _estado_tipos_memoria = {}
+    _ultimo_archivo_memoria = {}
+
     def __init__(self, _modulo, _ventana_principal):
         super().__init__(_ventana_principal)
+        self.window = _ventana_principal
         self.title('Seleccione las variables de las series')
         self.config(bg = COLOR_FONDO)
         cargar_icono(self)
@@ -27,6 +33,19 @@ class Variables(tk.Toplevel):
         self.modulo = _modulo
 
         self.leer_encabezados()
+
+        # Detectar si se ha cargado un archivo nuevo para limpiar el estado guardado
+        archivo_actual = getattr(self.modulo, 'archivo', None)
+        ruta_actual = getattr(archivo_actual, 'ruta', str(archivo_actual)) if archivo_actual else None
+        
+        modulo_id = id(self.modulo)
+        archivo_previo = Variables._ultimo_archivo_memoria.get(modulo_id)
+
+        if archivo_previo != ruta_actual:
+            # Archivo nuevo detectado: limpiamos memoria de este módulo
+            Variables._estado_checks_memoria.pop(modulo_id, None)
+            Variables._estado_tipos_memoria.pop(modulo_id, None)
+            Variables._ultimo_archivo_memoria[modulo_id] = ruta_actual
 
         # Encabezado superior fijo
         Encabezado(self, 'Variables', _descripcion = '''Debido a la gran variedad de nombres que puede recibir una misma
@@ -119,6 +138,10 @@ que tipo de dato corresponde.''')
         self.opciones = []
         self.tipos    = []
 
+        # Recuperar estados de memoria previos si existen
+        checks_guardados = Variables._estado_checks_memoria.get(modulo_id)
+        tipos_guardados = Variables._estado_tipos_memoria.get(modulo_id)
+
         for i, variable in enumerate(self.variables_columnas):
             row_frame = tk.Frame(self.scrollable_frame, bg = COLOR_FONDO)
             row_frame.pack(expand=True, fill='x', pady=2)
@@ -144,13 +167,21 @@ que tipo de dato corresponde.''')
             row_frame.grid_columnconfigure(0, weight=1)
             row_frame.grid_columnconfigure(1, weight=0)
 
-            encabezado = unidecode(self.encabezados[i].lower())
-            self.tipos_por_defecto(encabezado, tipo_cb)
-            
-            # Evaluar estado inicial por defecto
-            self.actualizar_estado_check(i)
+            # Restaurar tipo de combobox y valor de checkbutton desde memoria o por defecto
+            if tipos_guardados and i < len(tipos_guardados):
+                tipo_cb.set(tipos_guardados[i])
+            else:
+                encabezado = unidecode(self.encabezados[i].lower())
+                self.tipos_por_defecto(encabezado, tipo_cb)
 
-        [variable.set(1) for variable in self.variables_columnas]
+            if checks_guardados and i < len(checks_guardados):
+                variable.set(checks_guardados[i])
+            else:
+                # Si no hay memoria previa, por defecto se marcan con 1 (a menos que aplique la regla)
+                variable.set(1)
+            
+            # Evaluar estado inicial por defecto (bloqueo si es Fecha u Hora)
+            self.actualizar_estado_check(i)
 
     def _on_mousewheel(self, event):
         self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
@@ -215,8 +246,10 @@ que tipo de dato corresponde.''')
             self.opciones[index].config(state='normal')  # Desbloquear checkbutton
 
     def seleccionar_todo(self):
-        for variable in self.variables_columnas:
-            variable.set(1)
+        for i, variable in enumerate(self.variables_columnas):
+            tipo_seleccionado = self.tipos[i].get()
+            if tipo_seleccionado not in ['Fecha', 'Hora'] and str(self.opciones[i].cget("state")) == 'normal':
+                variable.set(1)
 
     def limpiar_seleccion(self):
         for i, variable in enumerate(self.variables_columnas):
@@ -230,6 +263,12 @@ que tipo de dato corresponde.''')
 
         if ('Fecha' in tipos) and ('Hora' in tipos):
             self.canvas.unbind_all("<MouseWheel>") # Limpiar evento global al cerrar
+            
+            # Guardar estado actual en memoria antes de cerrar
+            modulo_id = id(self.modulo)
+            Variables._estado_checks_memoria[modulo_id] = [v.get() for v in self.variables_columnas]
+            Variables._estado_tipos_memoria[modulo_id] = tipos
+
             self.modulo.boton_filtros.habilitar()
             self.modulo.variables = {
                 variable : tipo 
@@ -237,6 +276,10 @@ que tipo de dato corresponde.''')
                 enumerate(zip(self.encabezados, tipos))
                 if self.variables_columnas[i].get() == 1
             }
+            
+            # Mensaje impreso por consola con la cantidad de variables seleccionadas
+            self.window.consola.escribir(f"Se han seleccionado, {len(self.modulo.variables)} variables....")
+
             self.destroy()
         else:
             showerror(

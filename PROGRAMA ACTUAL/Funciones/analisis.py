@@ -10,28 +10,7 @@ from Funciones.leer_datos     import leer_datos
 from Funciones.exportar_datos import exportar, exportar_eliminados
 
 def analisis(_archivo, _columnas, _filtros, _destino, _altitud = np.nan, _exportar_graficas = False, _exportar_eliminados = False, formato_fecha = '%d/%m/%Y %H:%M:%S'):
-    """
-    Interpola la serie del archivo, y aplica las correcciones indicadas. 
-    Genera un archivo CSV con la serie tras aplicarle las correcciones.
 
-    analisis(archivo, columnas, filtros, destino, altitud=np.nan, exportar_eliminados=False)
-
-    Parámetros de entrada
-    ---------------------
-    archivo : cadena
-        Ubicación del archivo.
-    columnas : lista (cadenas)
-        Contiene los nombres de las columnas de la serie
-    filtros : lista (funciones)
-        Contiene las correcciones que se van a aplicar
-    destino: cadena
-        Carpeta en la que se almacenan los archivos generados
-    altitud : número
-        Altitud de la estación correspondiente a la serie del archivo, en
-        m.s.n.m.
-    exportar_eliminados : booleano
-        Opción para crear un archivo de Excel con el reporte de datos elminados
-    """
     df = leer_datos(_archivo.ruta)
     df = df[list(_columnas.keys())]
 
@@ -52,18 +31,6 @@ def analisis(_archivo, _columnas, _filtros, _destino, _altitud = np.nan, _export
 
     _columnas = dict(zip(_columnas.keys(), columnas))
 
-    # Para que el indice no tenga fila a parte con el nombre
-    df.index.names = [None]
-    
-    # Se deja como indice una columna con fecha y hora con formato m/d/y h:m:s
-    df.set_index(pd.to_datetime(df['Fecha'] + ' ' + df['Hora'],
-                                format  = formato_fecha, 
-                                cache   = False), 
-                                inplace = True)
-    
-    # Se eliminan las columnas de fecha y hora
-    df.drop(df.columns[[0, 1]], axis = 1, inplace = True)   
-
     estacion = _archivo.nombre
 
     ruta_de_salida = _destino + '/' + estacion
@@ -73,23 +40,35 @@ def analisis(_archivo, _columnas, _filtros, _destino, _altitud = np.nan, _export
     graficar          = True if _exportar_graficas == 'si' else False
     
     try:
-        if c.CCal8_homogenizacion_intervalos in _filtros:
-            homogenizacion_intervalos        = lambda df: c.CCal8_homogenizacion_intervalos(df, formato_fecha)
-            homogenizacion_intervalos.nombre = c.CCal8_homogenizacion_intervalos.nombre
+        if c.CCal15_redondeo_p2 in _filtros:
+            redondeo_p2        = lambda df: c.CCal15_redondeo_p2(df, resolucion = 0.2)
+            redondeo_p2.nombre = c.CCal15_redondeo_p2.nombre
 
-            _filtros[_filtros.index(c.CCal8_homogenizacion_intervalos)] = homogenizacion_intervalos
+            _filtros[_filtros.index(c.CCal15_redondeo_p2)] = redondeo_p2
             
-        if c.CCal11_histograma_valores in _filtros:
-            histograma_valores        = lambda df: c.CCal11_histograma_valores(df, estacion, graficar, ruta_graficas)
-            histograma_valores.nombre = c.CCal11_histograma_valores.nombre
+        if c.CCal3_conversion_a_temporal in _filtros:
+            conversion_a_temporal        = lambda df: c.CCal3_conversion_a_temporal(df, formato_fecha)
+            conversion_a_temporal.nombre = c.CCal3_conversion_a_temporal.nombre
 
-            _filtros[_filtros.index(c.CCal11_histograma_valores)] = histograma_valores
+            _filtros[_filtros.index(c.CCal3_conversion_a_temporal)] = conversion_a_temporal
+            
+        if c.CCal14_homogenizacion_intervalos in _filtros:
+            homogenizacion_intervalos        = lambda df: c.CCal14_homogenizacion_intervalos(df, formato_fecha)
+            homogenizacion_intervalos.nombre = c.CCal14_homogenizacion_intervalos.nombre
 
-        if c.CCal12_deviaciones_estandar in _filtros:
-            percentil_horario        = lambda df: c.CCal12_deviaciones_estandar(df, ruta_graficas, graficar)
-            percentil_horario.nombre = c.CCal12_deviaciones_estandar.nombre
+            _filtros[_filtros.index(c.CCal14_homogenizacion_intervalos)] = homogenizacion_intervalos
+            
+        if c.CCal18_histograma_valores in _filtros:
+            histograma_valores        = lambda df: c.CCal18_histograma_valores(df, estacion, graficar, ruta_graficas)
+            histograma_valores.nombre = c.CCal18_histograma_valores.nombre
 
-            _filtros[_filtros.index(c.CCal12_deviaciones_estandar)] = percentil_horario
+            _filtros[_filtros.index(c.CCal18_histograma_valores)] = histograma_valores
+
+        if c.CCal19_desviaciones_estandar in _filtros:
+            percentil_horario        = lambda df: c.CCal19_desviaciones_estandar(df, ruta_graficas, graficar)
+            percentil_horario.nombre = c.CCal19_desviaciones_estandar.nombre
+
+            _filtros[_filtros.index(c.CCal19_desviaciones_estandar)] = percentil_horario
     except:
         pass
 
